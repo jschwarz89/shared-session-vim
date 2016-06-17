@@ -1,4 +1,5 @@
-let g:job_id = 0
+let s:job_id = 0
+let s:path = expand('<sfile>:p:h' ). "/python/ssvim.py"
 
 function! s:handle_stdout(job_id, data, event)
     echo a:data[0]
@@ -6,17 +7,16 @@ function! s:handle_stdout(job_id, data, event)
 endfunction
 
 function! s:handle_yank()
-    if g:job_id == 0
+    if s:job_id == 0
         call RunProcess(1337)
     endif
 
-    call async#job#send(g:job_id, json_encode(v:event) . "\n")
+    call async#job#send(s:job_id, json_encode(v:event) . "\n")
 endfunction
 
 function! RunProcess(port)
     let l:opts = {'on_stdout': function('s:handle_stdout')}
-    let l:path = expand("%:p:r") . "python/ssvim.py"
-    let g:job_id = async#job#start([g:python3_host_prog, l:path, a:port], l:opts)
+    let s:job_id = async#job#start([g:python3_host_prog, s:path, a:port], l:opts)
 endfunction
 
 call RunProcess(1337)
