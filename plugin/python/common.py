@@ -11,7 +11,7 @@ logger = logging.getLogger('ssvim')
 
 def get_port():
     try:
-        return sys.argv[1]
+        return int(sys.argv[1])
     except IndexError:
         return DEFAULT_PORT
 
@@ -31,7 +31,7 @@ def setup_logging(is_leader=False):
     formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
 
     logger.setLevel(logging.DEBUG)
-    for handler in [logging.FileHandler(path), logging.StreamHandler()]:
+    for handler in [logging.FileHandler(path)]:  # , logging.StreamHandler()]:
         handler.setLevel(logging.DEBUG)
         handler.setFormatter(formatter)
         logger.addHandler(handler)

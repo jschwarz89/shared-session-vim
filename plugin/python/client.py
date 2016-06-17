@@ -1,4 +1,6 @@
+import json
 import logging
+import os
 import time
 import selectors
 import socket
@@ -57,9 +59,27 @@ class Client(object):
 
         logger.info("starting to read from the server...")
         data = common.safe_recv(self.socket, failure_callback)
-        print(data)
+        if data:
+            logger.debug("Writing to vim: %s" % data)
+            print(data)
+            sys.stdout.flush()
+
+    def handle_vim_command(self, data):
+        json_data = json.loads(data)
+        if 'regcontents' in json_data:
+            # This is a yank data
+            register = json_data['regname']
+            if not register:
+                register = '"'
+            content = os.linesep.join(json_data['regcontents'])
+            if json_data['regtype'] == "V":
+                content += os.linesep
+            return ':let @%s="%s"' % (register, content)
+        return data
 
     def read_stdin(self, stdin):
         data = input()
         logger.debug("Received command from vim: %s" % data)
+
+        data = self.handle_vim_command(data) + os.linesep
         self.socket.send(data.encode())
