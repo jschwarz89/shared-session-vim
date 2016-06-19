@@ -17,6 +17,7 @@ class Leader(object):
         self.selector = selector
         self.clients = []
         self.socket = None
+        self.had_clients = False
 
     def run(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -39,6 +40,7 @@ class Leader(object):
     def server_callback(self, server_socket):
         (client, address) = self.socket.accept()
         logger.debug("New client connected: %s" % (address,))
+        self.had_clients = True
 
         client.setblocking(False)
         self.clients.append(client)
@@ -92,7 +94,9 @@ def main():
         return
 
     while True:
-        for key, mask in selector.select():
+        if not leader.clients and leader.had_clients:
+            break
+        for key, mask in selector.select(timeout=1):
             callback = key.data
             callback(key.fileobj)
 
