@@ -1,6 +1,4 @@
-import json
 import logging
-import os
 import time
 import selectors
 import socket
@@ -64,63 +62,7 @@ class Client(object):
             print(data)
             sys.stdout.flush()
 
-    def _handle_yank(self, json_data):
-        register = json_data['regname']
-        if not register:
-            register = '"'
-        content = os.linesep.join(json_data['regcontents'])
-        if json_data['regtype'] == "V":
-            content += os.linesep
-        return ':let @%s="%s"' % (register, content)
-
-    @staticmethod
-    def _get_file_path(vim_cwd, filename):
-        path = filename
-        if not filename.startswith("/"):
-            path = os.path.join(vim_cwd, filename)
-        return path
-
-    def _handle_new_buffer(self, json_data):
-        vim_cwd = json_data['cwd']
-        filename = json_data['filename']
-        if not filename:
-            return
-
-        return ":badd %s" % self._get_file_path(vim_cwd, filename)
-
-    def _handle_vim_opened(self, json_data):
-        commands = []
-        vim_cwd = json_data['cwd']
-        for line in json_data['buffers'].split(os.linesep):
-            if not line or "No Name" in line:
-                continue
-            content = line.split()
-            filename = content[2][1:-1]
-            commands.append(":badd %s" % self._get_file_path(
-                vim_cwd, filename))
-        return commands
-
-    def handle_vim_command(self, data):
-        json_data = json.loads(data)
-        if 'regcontents' in json_data:
-            data = self._handle_yank(json_data) + os.linesep
-            self.socket.send(data.encode())
-
-        elif 'filename' in json_data:
-            data = self._handle_new_buffer(json_data)
-            if data:
-                data += os.linesep
-                self.socket.send(data.encode())
-
-        elif 'buffers' in json_data:
-            commands = self._handle_vim_opened(json_data)
-            for command in commands:
-                data = command + os.linesep
-                self.socket.send(data.encode())
-
-        return data
-
     def read_stdin(self, stdin):
         data = input()
         logger.debug("Received command from vim: %s" % data)
-        self.handle_vim_command(data)
+        self.socket.send(data.encode())

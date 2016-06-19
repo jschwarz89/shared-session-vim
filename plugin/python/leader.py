@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import logging
 import os
 import selectors
@@ -7,6 +6,7 @@ import socket
 import sys
 
 import common
+import vim_state
 
 logger = logging.getLogger('ssvim')
 
@@ -15,6 +15,7 @@ class Leader(object):
     def __init__(self, port, selector):
         self.port = port
         self.selector = selector
+        self.vim_state = vim_state.VimState()
         self.clients = []
         self.socket = None
         self.had_clients = False
@@ -47,21 +48,26 @@ class Leader(object):
         self.selector.register(client, selectors.EVENT_READ,
                                self.handle_socket_data)
 
-    def handle_socket_data(self, triggering_client):
+    def handle_socket_data(self, joining_client):
         def failure_callback():
             logger.warning("Socket appears to be dead. Closing just in case.")
-            triggering_client.close()
-            self.clients.remove(triggering_client)
-            self.selector.unregister(triggering_client)
+            joining_client.close()
+            self.clients.remove(joining_client)
+            self.selector.unregister(joining_client)
 
-        data = common.safe_recv(triggering_client, failure_callback)
+        data = common.safe_recv(joining_client, failure_callback)
         if not data:
             return
+
+        (commands_for_joining, commands_for_rest) = (
+            self.vim_state.get_vim_commands(data))
+
+        joining_client.send(commands_for_joining)
         for client in self.clients:
-            if client == triggering_client:
+            if client == joining_client:
                 continue
 
-            client.send(data.encode())
+            client.send(commands_for_rest)
 
 
 def spawn(port):
@@ -101,4 +107,7 @@ def main():
             callback(key.fileobj)
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.exception("Uncaught error: %r" % e)

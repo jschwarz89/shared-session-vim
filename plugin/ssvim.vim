@@ -2,7 +2,12 @@ let s:job_id = 0
 let s:path = expand('<sfile>:p:h' ). "/python/ssvim.py"
 
 function! s:handle_stdout(job_id, data, event)
-    for cmd in a:data
+    " Seperate the stdin by our magic marker
+    let l:commands = split(join(a:data[:-1], "\n"), "0b6f83ef")
+    " The last command is concatenated with a "\n". We want to remove it.
+    let l:commands[-1] = substitute(l:commands[-1], "\n$", "", "")
+
+    for cmd in l:commands
         execute cmd
     endfor
 endfunction
