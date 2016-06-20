@@ -30,12 +30,21 @@ function! s:handle_yank()
     call async#job#send(s:job_id, json_encode(v:event) . "\n")
 endfunction
 
-function! s:handle_buf_enter()
+function! s:handle_buf_new()
     if s:job_id == 0
         call RunProcess(1337)
     endif
 
-    let l:data = {'cwd': getcwd(), 'filename': expand("<afile>")}
+    let l:data = {'cwd': getcwd(), 'new': expand("<afile>")}
+    call async#job#send(s:job_id, json_encode(l:data) . "\n")
+endfunction
+
+function! s:handle_buf_delete()
+    if s:job_id == 0
+        call RunProcess(1337)
+    endif
+
+    let l:data = {'cwd': getcwd(), 'delete': expand("<afile>")}
     call async#job#send(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
@@ -60,7 +69,8 @@ endfunction
 call RunProcess(1337)
 
 autocmd TextYankPost * call s:handle_yank()
-autocmd BufNew * call s:handle_buf_enter()
+autocmd BufNew * call s:handle_buf_new()
+autocmd BufDelete * call s:handle_buf_delete()
 autocmd VimEnter * call s:handle_vim_opened()
 
 " Force redraw for airline

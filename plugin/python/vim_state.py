@@ -47,7 +47,7 @@ class VimState(object):
 
     def _handle_new_buffer(self, json_data):
         vim_cwd = json_data['cwd']
-        filename = json_data['filename']
+        filename = json_data['new']
         if not filename:
             return []
 
@@ -60,6 +60,19 @@ class VimState(object):
         else:
             self.opened_buffers.add(file_path)
             return [":badd %s" % file_path]
+
+    def _handle_deleted_buffer(self, json_data):
+        vim_cwd = json_data['cwd']
+        filename = json_data['delete']
+        if not filename:
+            return []
+
+        file_path = self._get_file_path(vim_cwd, filename)
+        if file_path in self.opened_buffers:
+            self.opened_buffers.remove(file_path)
+            return [":bd %s" % file_path]
+        else:
+            return []
 
     def _handle_vim_started(self, json_data):
         commands = []
@@ -82,8 +95,11 @@ class VimState(object):
         if 'regcontents' in json_data:
             commands_for_rest.extend(self._handle_yank(json_data))
 
-        elif 'filename' in json_data:
+        elif 'new' in json_data:
             commands_for_rest.extend(self._handle_new_buffer(json_data))
+
+        elif 'delete' in json_data:
+            commands_for_rest.extend(self._handle_deleted_buffer(json_data))
 
         elif 'buffers' in json_data:
             commands_for_rest.extend(self._handle_vim_started(json_data))
@@ -91,7 +107,11 @@ class VimState(object):
         logger.debug("Commands for the rest of the clients: %r" %
                      commands_for_rest)
 
+        commands_for_joining = []
+        if "buffers" in json_data:
+            commands_for_joining = self._get_commands_for_joining()
+
         return (
-            self._get_vim_string(self._get_commands_for_joining()),
+            self._get_vim_string(commands_for_joining),
             self._get_vim_string(commands_for_rest)
         )
