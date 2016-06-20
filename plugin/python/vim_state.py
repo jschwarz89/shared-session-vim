@@ -49,11 +49,17 @@ class VimState(object):
         vim_cwd = json_data['cwd']
         filename = json_data['filename']
         if not filename:
-            return
+            return []
 
         file_path = self._get_file_path(vim_cwd, filename)
-        self.opened_buffers.add(file_path)
-        return [":badd %s" % file_path]
+        if (filename.startswith("/usr/") and
+            "vim" in filename and
+            filename.endswith(".txt")):
+            # Ignore vim help files
+            return []
+        else:
+            self.opened_buffers.add(file_path)
+            return [":badd %s" % file_path]
 
     def _handle_vim_started(self, json_data):
         commands = []

@@ -15,7 +15,7 @@ function! s:handle_stdout(job_id, data, event)
                 if getbufvar(1, "&mod") == 0
                     " The first 'scrach' buffer is unmodified and open.
                     " Close it.
-                    silent bd 1
+                    silent! bd 1
                 endif
             endif
         endif
