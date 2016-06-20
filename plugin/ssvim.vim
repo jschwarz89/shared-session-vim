@@ -9,6 +9,16 @@ function! s:handle_stdout(job_id, data, event)
 
     for cmd in l:commands
         execute cmd
+
+        if split(cmd, " ")[0] == ":badd"
+            if bufname(1) == ""
+                if getbufvar(1, "&mod") == 0
+                    " The first 'scrach' buffer is unmodified and open.
+                    " Close it.
+                    silent bd 1
+                endif
+            endif
+        endif
     endfor
 endfunction
 
