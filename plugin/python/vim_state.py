@@ -27,7 +27,7 @@ class VimState(object):
         commands = []
 
         for register, content in self.yanked_registers.items():
-            commands.append('let @%s="%s"' % (register, content))
+            commands.append("let @%s='%s'" % (register, content))
         for filename in self.opened_buffers:
             commands.append(':badd %s' % filename)
 
@@ -43,7 +43,7 @@ class VimState(object):
             content += os.linesep
 
         self.yanked_registers[register] = content
-        return [':let @%s="%s"' % (register, content)]
+        return [":let @%s='%s'" % (register, content)]
 
     def _handle_new_buffer(self, json_data):
         vim_cwd = json_data['cwd']
