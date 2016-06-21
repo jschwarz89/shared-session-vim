@@ -24,7 +24,7 @@ endfunction
 
 function! s:handle_yank()
     if s:job_id == 0
-        call RunProcess(1337)
+        return
     endif
 
     call async#job#send(s:job_id, json_encode(v:event) . "\n")
@@ -32,7 +32,7 @@ endfunction
 
 function! s:handle_buf_new()
     if s:job_id == 0
-        call RunProcess(1337)
+        return
     endif
 
     let l:data = {'cwd': getcwd(), 'new': expand("<afile>")}
@@ -41,7 +41,7 @@ endfunction
 
 function! s:handle_buf_delete()
     if s:job_id == 0
-        call RunProcess(1337)
+        return
     endif
 
     let l:data = {'cwd': getcwd(), 'delete': expand("<afile>")}
@@ -50,7 +50,7 @@ endfunction
 
 function! s:handle_vim_opened()
     if s:job_id == 0
-        call RunProcess(1337)
+        return
     endif
 
     redir => l:buffers
@@ -61,12 +61,11 @@ function! s:handle_vim_opened()
     call async#job#send(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
-function! RunProcess(port)
+function! SSVIMActivate(port)
     let l:opts = {'on_stdout': function('s:handle_stdout')}
     let s:job_id = async#job#start([g:python3_host_prog, s:path, a:port], l:opts)
+    call s:handle_vim_opened()
 endfunction
-
-call RunProcess(1337)
 
 autocmd TextYankPost * call s:handle_yank()
 autocmd BufNew * call s:handle_buf_new()
