@@ -10,7 +10,7 @@ will be shared across Vim instances. Awesome! :>
 
 ## Demo
 
-![ssvim demo](https://github.com/jschwarz89/shared-session-vim/blob/master/demo/ssvim.gif)
+![ssvim demo](https://github.com/jschwarz89/demos/blob/master/ssvim.gif)
 
 
 ## Requirements:
