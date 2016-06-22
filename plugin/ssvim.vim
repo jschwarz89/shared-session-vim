@@ -1,6 +1,7 @@
 let s:job_id = 0
 let s:path = expand('<sfile>:p:h' ). "/python/ssvim.py"
 
+
 function! s:handle_stdout(job_id, data, event)
     " Seperate the stdin by our magic marker
     let l:commands = split(join(a:data[:-1], "\n"), "0b6f83ef")
@@ -22,37 +23,25 @@ function! s:handle_stdout(job_id, data, event)
     endfor
 endfunction
 
-function! s:handle_yank()
-    if s:job_id == 0
-        return
-    endif
 
+function! s:handle_yank()
     call async#job#send(s:job_id, json_encode(v:event) . "\n")
 endfunction
 
-function! s:handle_buf_new()
-    if s:job_id == 0
-        return
-    endif
 
+function! s:handle_buf_new()
     let l:data = {'cwd': getcwd(), 'new': expand("<afile>")}
     call async#job#send(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
-function! s:handle_buf_delete()
-    if s:job_id == 0
-        return
-    endif
 
+function! s:handle_buf_delete()
     let l:data = {'cwd': getcwd(), 'delete': expand("<afile>")}
     call async#job#send(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
-function! s:handle_vim_opened()
-    if s:job_id == 0
-        return
-    endif
 
+function! s:handle_vim_opened()
     redir => l:buffers
     silent buffers
     redir END
@@ -61,16 +50,47 @@ function! s:handle_vim_opened()
     call async#job#send(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
+
+function s:ssvim_disable()
+    augroup SSVIMAutoCommands
+        autocmd!
+    augroup END
+endfunction
+
+
+
+function s:ssvim_decorator(func)
+    if s:job_id == 0
+        call s:ssvim_disable()
+        return
+    else
+        call a:func()
+    endif
+endfunction
+
+
 function! SSVIMActivate(port)
+    augroup SSVIMAutoCommands
+        autocmd!
+        autocmd TextYankPost * call s:ssvim_decorator(function('s:handle_yank'))
+        autocmd BufNew * call s:ssvim_decorator(function('s:handle_buf_new'))
+        autocmd BufDelete * call s:ssvim_decorator(function('s:handle_buf_delete'))
+        autocmd VimEnter * call s:ssvim_decorator(function('s:handle_vim_opened'))
+    augroup END
+
     let l:opts = {'on_stdout': function('s:handle_stdout')}
     let s:job_id = async#job#start([g:python3_host_prog, s:path, a:port], l:opts)
     call s:handle_vim_opened()
 endfunction
 
-autocmd TextYankPost * call s:handle_yank()
-autocmd BufNew * call s:handle_buf_new()
-autocmd BufDelete * call s:handle_buf_delete()
-autocmd VimEnter * call s:handle_vim_opened()
+
+function! SSVIMStop()
+    if s:job_id
+        call s:ssvim_disable()
+        call async#job#stop(s:job_id)
+    endif
+endfunction
+
 
 " Force redraw for airline
 autocmd BufNew * set mod!|redraws|set mod!

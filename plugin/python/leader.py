@@ -102,7 +102,7 @@ def main():
     while True:
         if not leader.clients and leader.had_clients:
             break
-        for key, mask in selector.select(timeout=1):
+        for key, mask in selector.select():
             callback = key.data
             callback(key.fileobj)
 

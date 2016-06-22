@@ -12,6 +12,13 @@ class VimState(object):
         self.yanked_registers = {}
         self.opened_buffers = set()
 
+        self.KEY_TO_FUNC = {
+            'regcontents': self._handle_yank,
+            'new': self._handle_new_buffer,
+            'delete': self._handle_deleted_buffer,
+            'buffers': self._handle_vim_started,
+        }
+
     @staticmethod
     def _get_file_path(vim_cwd, filename):
         path = filename
@@ -92,17 +99,10 @@ class VimState(object):
         commands_for_rest = []
         json_data = json.loads(data)
 
-        if 'regcontents' in json_data:
-            commands_for_rest.extend(self._handle_yank(json_data))
-
-        elif 'new' in json_data:
-            commands_for_rest.extend(self._handle_new_buffer(json_data))
-
-        elif 'delete' in json_data:
-            commands_for_rest.extend(self._handle_deleted_buffer(json_data))
-
-        elif 'buffers' in json_data:
-            commands_for_rest.extend(self._handle_vim_started(json_data))
+        for key, func in self.KEY_TO_FUNC.items():
+            if key in json_data:
+                commands_for_rest.extend(func(json_data))
+                break
 
         logger.debug("Commands for the rest of the clients: %r" %
                      commands_for_rest)
