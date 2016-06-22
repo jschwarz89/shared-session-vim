@@ -8,6 +8,11 @@ Basically, whenever you open a new buffered or yank data into some register, it
 will be shared across Vim instances. Awesome! :>
 
 
+## Demo
+
+![ssvim demo](https://github.com/jschwarz89/shared-session-vim/blob/master/demo/ssvim.gif)
+
+
 ## Requirements:
 
 Python3 is required (the python processes depend on "selectors" which was
