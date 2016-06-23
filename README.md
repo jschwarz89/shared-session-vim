@@ -50,7 +50,6 @@ And so on...
 yank and paste as required :)
 
 
-
 ## Usage
 
 Please spend a minute to read the following - it will make your life easier:
@@ -75,6 +74,10 @@ Please spend a minute to read the following - it will make your life easier:
    ```viml
    :call SSVIMStop()
    ```
+
+Note that closing a Vim process also closes the ssvim under it, and closing all
+the Vim processes of some session will cause the leader to shut down, thus
+closing the shared session completely.
 
 
 ## Architecture
