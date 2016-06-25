@@ -9,7 +9,13 @@ function! s:handle_stdout(job_id, data, event)
     let l:commands[-1] = substitute(l:commands[-1], "\n$", "", "")
 
     for cmd in l:commands
-        execute cmd
+        if split(cmd, " ")[0] == ":badd"
+            if getbufvar(1, "&mod") != 0
+                execute cmd
+            endif
+        else
+            execute cmd
+        endif
 
         if split(cmd, " ")[0] == ":badd"
             if getbufvar(1, "&mod") == 0
