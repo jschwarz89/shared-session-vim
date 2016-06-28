@@ -9,8 +9,14 @@ function! s:handle_stdout(job_id, data, event)
     let l:commands[-1] = substitute(l:commands[-1], "\n$", "", "")
 
     for cmd in l:commands
-        if split(cmd, " ")[0] == ":badd"
-            if getbufvar(1, "&mod") != 0
+        let l:command = split(cmd, " ")[0]
+        let l:filename = split(cmd, " ")[1]
+
+        if l:command == ":badd"
+            let l:bufnr = bufnr(l:filename)
+            if l:bufnr == -1 " Buffer doesn't exist
+                execute cmd
+            elseif getbufvar(l:bufnr, "&mod") == 0 " Buffer unmodified
                 execute cmd
             endif
         else
