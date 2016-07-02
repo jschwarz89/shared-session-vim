@@ -32,7 +32,6 @@ function! s:handle_stdout(job_id, data, event)
             let cmd = substitute(cmd, '\\"', '"', "g")
             execute cmd
         else
-            echoerr cmd
             execute cmd
         endif
     endfor
@@ -46,6 +45,12 @@ endfunction
 
 function! s:handle_buf_new()
     let l:data = {'cwd': getcwd(), 'new': expand("<afile>")}
+    call async#job#send(s:job_id, json_encode(l:data) . "\n")
+endfunction
+
+
+function! s:handle_buf_edit()
+    let l:data = {'cwd': getcwd(), 'edit': expand("<afile>")}
     call async#job#send(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
@@ -89,6 +94,7 @@ function! SSVIMActivate(port)
         autocmd!
         autocmd TextYankPost * call s:ssvim_decorator(function('s:handle_yank'))
         autocmd BufNew * call s:ssvim_decorator(function('s:handle_buf_new'))
+        autocmd BufWritePost * call s:ssvim_decorator(function('s:handle_buf_edit'))
         autocmd BufDelete * call s:ssvim_decorator(function('s:handle_buf_delete'))
         autocmd VimEnter * call s:ssvim_decorator(function('s:handle_vim_opened'))
     augroup END

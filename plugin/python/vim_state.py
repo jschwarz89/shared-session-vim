@@ -18,6 +18,7 @@ class VimState(object):
         self.KEY_TO_FUNC = {
             'regcontents': self._handle_yank,
             'new': self._handle_new_buffer,
+            'edit': self._handle_editted_buffer,
             'delete': self._handle_deleted_buffer,
             'buffers': self._handle_vim_started,
         }
@@ -32,6 +33,12 @@ class VimState(object):
     @classmethod
     def _get_vim_string(cls, commands):
         return cls.COMMAND_SEPERATOR.join(commands).encode()
+
+    @staticmethod
+    def _should_ignore_filename(filename):
+        return (filename.startswith("/usr/") and
+                "vim" in filename and
+                filename.endswith(".txt"))
 
     def _get_commands_for_joining(self):
         commands = []
@@ -64,14 +71,23 @@ class VimState(object):
             return []
 
         file_path = self._get_file_path(vim_cwd, filename)
-        if (filename.startswith("/usr/") and
-            "vim" in filename and
-            filename.endswith(".txt")):
-            # Ignore vim help files
+        if self._should_ignore_filename(filename):
             return []
         else:
             self.opened_buffers.add(file_path)
             return [":badd %s" % file_path]
+
+    def _handle_editted_buffer(self, json_data):
+        vim_cwd = json_data['cwd']
+        filename = json_data['edit']
+        if not filename:
+            return []
+
+        file_path = self._get_file_path(vim_cwd, filename)
+        if self._should_ignore_filename(filename):
+            return []
+        else:
+            return [":edit %s" % file_path]
 
     def _handle_deleted_buffer(self, json_data):
         vim_cwd = json_data['cwd']
