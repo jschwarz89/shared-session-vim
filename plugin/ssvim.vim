@@ -39,25 +39,25 @@ endfunction
 
 
 function! s:handle_yank()
-    call async#job#send(s:job_id, json_encode(v:event) . "\n")
+    call jobsend(s:job_id, json_encode(v:event) . "\n")
 endfunction
 
 
 function! s:handle_buf_new()
     let l:data = {'cwd': getcwd(), 'new': expand("<afile>")}
-    call async#job#send(s:job_id, json_encode(l:data) . "\n")
+    call jobsend(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
 
 function! s:handle_buf_edit()
     let l:data = {'cwd': getcwd(), 'edit': expand("<afile>")}
-    call async#job#send(s:job_id, json_encode(l:data) . "\n")
+    call jobsend(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
 
 function! s:handle_buf_delete()
     let l:data = {'cwd': getcwd(), 'delete': expand("<afile>")}
-    call async#job#send(s:job_id, json_encode(l:data) . "\n")
+    call jobsend(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
 
@@ -67,7 +67,7 @@ function! s:handle_vim_opened()
     redir END
 
     let l:data = {'cwd': getcwd(), 'buffers': l:buffers}
-    call async#job#send(s:job_id, json_encode(l:data) . "\n")
+    call jobsend(s:job_id, json_encode(l:data) . "\n")
 endfunction
 
 
@@ -100,7 +100,7 @@ function! SSVIMActivate(port)
     augroup END
 
     let l:opts = {'on_stdout': function('s:handle_stdout')}
-    let s:job_id = async#job#start([g:python3_host_prog, s:path, a:port], l:opts)
+    let s:job_id = jobstart([g:python3_host_prog, s:path, a:port], l:opts)
     call s:handle_vim_opened()
 endfunction
 
@@ -108,7 +108,7 @@ endfunction
 function! SSVIMStop()
     if s:job_id
         call s:ssvim_disable()
-        call async#job#stop(s:job_id)
+        call jobstop(s:job_id)
     endif
 endfunction
 
