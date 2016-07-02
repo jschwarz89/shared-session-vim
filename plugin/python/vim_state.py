@@ -1,12 +1,15 @@
 import json
 import logging
 import os
+import re
 
 logger = logging.getLogger('ssvim')
 
 
 class VimState(object):
     COMMAND_SEPERATOR = "0b6f83ef"
+    BUFFER_LINE_MATCHER = re.compile(
+        '\s*\d+ (?P<modifiers>.+) "(?P<bufname>.*)"\s+line \d+')
 
     def __init__(self):
         self.yanked_registers = {}
@@ -89,9 +92,11 @@ class VimState(object):
         for line in json_data['buffers'].split(os.linesep):
             if not line or "No Name" in line:
                 continue
-            content = line.split()
-            filename = content[2][1:-1]
+            match = self.BUFFER_LINE_MATCHER.search(line)
+            if not match:
+                continue
 
+            filename = match.group("bufname")
             file_path = self._get_file_path(vim_cwd, filename)
             self.opened_buffers.add(file_path)
             commands.append(":badd %s" % file_path)
