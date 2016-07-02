@@ -28,10 +28,8 @@ function! s:handle_stdout(job_id, data, event)
                 endif
             endif
         elseif l:command == ":let"
-            echoerr "before: " . cmd
             let cmd = substitute(cmd, '\\''\\''', "'", "g")
             let cmd = substitute(cmd, '\\"', '"', "g")
-            echoerr "after:  " . cmd
             execute cmd
         else
             echoerr cmd
