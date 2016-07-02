@@ -5,7 +5,7 @@ Shared Session Vim (or ssvim) is used to synchronize more than one by making
 them use the same registers, open the same files, etc...
 
 Basically, whenever you open a new buffered or yank data into some register, it
-will be shared across Vim instances. Awesome! :>
+will be shared across NeoVim instances. Awesome! :>
 
 
 ## Demo
@@ -16,16 +16,10 @@ will be shared across Vim instances. Awesome! :>
 ## Requirements:
 
 Python3 is required (the python processes depend on "selectors" which was
-introduced in Python 3.4. Also, either Neovim or Vim 7.4 running patch 1274 is
-required.
-
+introduced in Python 3.4. Also, this currently only works for NeoVim... Work
+for Vim is being worked on.
 
 ## Installation
-
-This plugin was written in Neovim with Vim in mind. Vim 7.4.1274 added its own
-version of async IO, with different API than Neovim's. For this reason,
-this plugin uses prabirshrestha/async.vim in order to make sure that the plugin
-works for both Vim and Neovim.
 
 Installation is a breeze: with your favorite bundler, add the following to your
 vimrc:
@@ -33,14 +27,12 @@ vimrc:
 For dein.vim:
 
 ```viml
-call dein#add('prabirshrestha/async.vim')
 call dein#add('jschwarz89/shared-session-vim')
 ```
 
 For Vundle:
 
 ```viml
-Bundle 'prabirshrestha/async.vim'
 Bundle 'jschwarz89/shared-session-vim'
 ```
 
@@ -54,8 +46,8 @@ yank and paste as required :)
 
 Please spend a minute to read the following - it will make your life easier:
 
-0. "Shared Sessions" are basically 1 or more Vim/Neovim which have run the
-   "SSVIMActivate" function with some shared port. For example, having 2 Vim
+0. "Shared Sessions" are basically 1 or more NeoVim which have run the
+   "SSVIMActivate" function with some shared port. For example, having 2 NeoVim
    instances run SSVIMActivate(1337) will connect them together to one session.
    Adding a new SSVIMActivate(1338) will create *another* shared session which
    is not shared with the one using port 1337.
@@ -67,31 +59,31 @@ Please spend a minute to read the following - it will make your life easier:
    ```
 
 2. That's it. From now on, opening a buffer or yanking some data to one of the
-   registers will propegate this data to the other Vims which are connected to
-   the same port.
-3. To detach a Vim from a session, run:
+   registers will propegate this data to the other NeoVims which are connected
+   to the same port.
+3. To detach a NeoVim from a session, run:
 
    ```viml
    :call SSVIMStop()
    ```
 
-Note that closing a Vim process also closes the ssvim under it, and closing all
-the Vim processes of some session will cause the leader to shut down, thus
-closing the shared session completely.
+Note that closing a NeoVim process also closes the ssvim under it, and closing
+all the NeoVim processes of some session will cause the leader to shut down,
+thus closing the shared session completely.
 
 
 ## Architecture
 
-The architecture is a bit more complicated. Basically, each Vim/Neovim that
-joins a session spawns a python process, 'ssvim.py', which is ran using Vim's
-or NeoVim's Async IO features. Whenever some Vim session with an attached ssvim
+The architecture is a bit more complicated. Basically, each NeoVim that
+joins a session spawns a python process, 'ssvim.py', which is ran using
+NeoVim's Async IO features. Whenever some NeoVim session with an attached ssvim
 process does something of interest (read: yanks/opens a nonhidden buffer), that
 information is sent to the ssvim.py process.
 
 In addition, whenever an ssvim.py spawns he also tries to spawn another
 process, 'leader.py'. The leader process is the one that binds the specified
 port number, accepts TCP connections from the 'ssvim.py' processes (one for
-each Vim/Neovim) and distributes :badd and :let commands as needed to propegate
+each NeoVim) and distributes :badd and :let commands as needed to propegate
 information to all the other clients. Since only one process can bind some port
 at a time, only one leader per shared session is possible. Also, if and when a
 leader crashes, the ssvim.py processes spawn new leaders, and the first one to
@@ -103,7 +95,7 @@ So basically:
 
        --------------                    --------------
        |            |                    |            |
-       | Vim/Neovim |      . . . .       | Vim/Neovim |
+       |   NeoVim   |      . . . .       |   NeoVim   |
        |            |                    |            |
        --------------                    --------------
              |                                 |
