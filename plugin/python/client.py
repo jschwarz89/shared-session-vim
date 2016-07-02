@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 import selectors
 import socket
@@ -65,4 +66,6 @@ class Client(object):
     def read_stdin(self, stdin):
         data = input()
         logger.debug("Received command from vim: %s" % data)
+
+        data += os.linesep
         self.socket.send(data.encode())

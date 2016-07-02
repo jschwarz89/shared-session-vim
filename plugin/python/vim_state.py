@@ -118,21 +118,47 @@ class VimState(object):
             commands.append(":badd %s" % file_path)
         return commands
 
-    def get_vim_commands(self, data):
+    def _handle_vim_command(self, command):
         commands_for_rest = []
-        json_data = json.loads(data)
 
         for key, func in self.KEY_TO_FUNC.items():
-            if key in json_data:
-                commands_for_rest.extend(func(json_data))
+            if key in command:
+                commands_for_rest.extend(func(command))
                 break
 
         logger.debug("Commands for the rest of the clients: %r" %
                      commands_for_rest)
 
         commands_for_joining = []
-        if "buffers" in json_data:
+        if "buffers" in command:
             commands_for_joining = self._get_commands_for_joining()
+
+        return commands_for_joining, commands_for_rest
+
+    def get_vim_commands(self, data):
+        try:
+            commands = [json.loads(data)]
+        except json.decoder.JSONDecodeError:
+            # Maybe there are multiple commands...
+            raw_commands = data.split("}" + os.linesep + "{")
+
+            commands = []
+            for command in raw_commands:
+                command = command.strip()
+                if not command.startswith("{"):
+                    command = "{%s" % command
+                if not command.endswith("}"):
+                    command = "%s}" % command
+                commands.append(json.loads(command))
+
+        commands_for_joining = []
+        commands_for_rest = []
+
+        for command in commands:
+            joining, rest = self._handle_vim_command(command)
+
+            commands_for_joining.extend(joining)
+            commands_for_rest.extend(rest)
 
         return (
             self._get_vim_string(commands_for_joining),
