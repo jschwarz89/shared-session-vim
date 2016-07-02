@@ -19,11 +19,7 @@ function! s:handle_stdout(job_id, data, event)
             elseif getbufvar(l:bufnr, "&mod") == 0 " Buffer unmodified
                 execute cmd
             endif
-        else
-            execute cmd
-        endif
 
-        if split(cmd, " ")[0] == ":badd"
             if getbufvar(1, "&mod") == 0
                 if bufname(1) == ""
                     " The first 'scrach' buffer is unmodified and open.
@@ -31,6 +27,15 @@ function! s:handle_stdout(job_id, data, event)
                     silent! bd 1
                 endif
             endif
+        elseif l:command == ":let"
+            echoerr "before: " . cmd
+            let cmd = substitute(cmd, '\\''\\''', "'", "g")
+            let cmd = substitute(cmd, '\\"', '"', "g")
+            echoerr "after:  " . cmd
+            execute cmd
+        else
+            echoerr cmd
+            execute cmd
         endif
     endfor
 endfunction

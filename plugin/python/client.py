@@ -58,8 +58,8 @@ class Client(object):
         logger.info("starting to read from the server...")
         data = common.safe_recv(self.socket, failure_callback)
         if data:
-            logger.debug("Writing to vim: %s" % data)
-            print(data)
+            logger.debug("Writing to vim: %r" % data)
+            print(repr(data)[1:-1])
             sys.stdout.flush()
 
     def read_stdin(self, stdin):
